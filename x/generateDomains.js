@@ -32,6 +32,12 @@ export const generateDomains = (length, keyword) => {
     generateRandom("", length);
   }
 
+  for (let i = domains.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * i);
+    const temp = domains[i];
+    domains[i] = domains[j];
+    domains[j] = temp;
+  }
+
   return domains;
 };
-
