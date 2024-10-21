@@ -1,10 +1,12 @@
-# short-domain-finder
+# Short Domain Finder
 
 To install dependencies:
 
 ```bash
 bun install
 ```
+
+Edit config.json
 
 To run:
 
