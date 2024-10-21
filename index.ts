@@ -4,8 +4,8 @@ import { checkDomain } from "./x/checkDomain";
 const file = Bun.file("domains.txt");
 const writer = file.writer();
 
-const length = 8;
-const keyword = "besoeas";
+const length = 4;
+const keyword = "aa";
 const domain_extension = ".com";
 
 async function main() {
@@ -18,7 +18,7 @@ async function main() {
 
     const addrs = await checkDomain(domain);
 
-    if (addrs === null) {
+    if (addrs) {
       console.log("Found : " + domain);
 
       writer.write(domain + "\n");
