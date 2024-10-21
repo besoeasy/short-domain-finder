@@ -6,6 +6,10 @@ export const checkDomain = async (domain) => {
 
     return data || null;
   } catch (error) {
-    return null;
+    if (error.code === "ENOTFOUND") {
+      return null;
+    }
+
+    return [];
   }
 };
