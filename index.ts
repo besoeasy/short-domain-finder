@@ -8,7 +8,8 @@ const writer = file.writer();
 async function main() {
   const domains = generateDomains(config.length, config.keyword);
 
-  console.log("Total Possible Domains : " + domains.length);
+  let domaincounter = 0;
+  let founddomaincounter = 0;
 
   for await (const element of domains) {
     const domain = `${element}.${config.extension}`;
@@ -16,10 +17,26 @@ async function main() {
     const addrs = await checkDomain(domain);
 
     if (addrs) {
-      console.log("Found : " + domain);
-
+      founddomaincounter++;
       writer.write(domain + "\n");
     }
+
+    domaincounter++;
+
+    console.clear();
+
+    console.log(
+      "Checking : " +
+        element +
+        "." +
+        config.extension +
+        " (" +
+        domaincounter +
+        "/" +
+        domains.length +
+        ") - Found : " +
+        founddomaincounter
+    );
   }
 }
 
