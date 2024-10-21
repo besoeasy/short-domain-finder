@@ -3,7 +3,7 @@ import whoiser from "whoiser";
 
 const checkDomainDNS = async (domain) => {
   try {
-    const data = await dns.promises.resolve4(domain, { ttl: true });
+    const data = await dns.promises.resolve4(domain);
     return data || null;
   } catch (error) {
     return null;
