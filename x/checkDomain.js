@@ -34,7 +34,7 @@ export const checkDomain = async (domain) => {
     return false;
   }
 
-  const domainWhois = await whoiser(domain);
+  const domainWhois = await whoiser(domain, { timeout: 1000, follow: 2 });
 
   return isDomainAvailableFromWhois(domainWhois);
 };

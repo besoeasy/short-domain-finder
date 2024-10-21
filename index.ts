@@ -26,16 +26,7 @@ async function main() {
     console.clear();
 
     console.log(
-      "Checking : " +
-        element +
-        "." +
-        config.extension +
-        " (" +
-        domaincounter +
-        "/" +
-        domains.length +
-        ") - Found : " +
-        founddomaincounter
+      `Checking : ${element}.${config.extension} (${domaincounter}/${domains.length}) - Found : ${founddomaincounter}`
     );
   }
 }
