@@ -24,13 +24,11 @@ async function main() {
 
     domaincounter++;
 
-    if (Math.random() < 0.05) {
-      console.clear();
+    console.clear();
 
-      console.log(
-        `Checking : ${element}.${config.extension} (${domaincounter}/${domains.length}) - Found : ${founddomaincounter}`
-      );
-    }
+    console.log(
+      `Checking : ${element}.${config.extension} (${domaincounter}/${domains.length}) - Found : ${founddomaincounter}`
+    );
   }
 }
 
