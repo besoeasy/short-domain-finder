@@ -1,0 +1,21 @@
+name: bun
+
+on:
+  push:
+    branches:
+      - main  # Change to your default branch if necessary
+  schedule:
+    - cron: '0 0 * * *'  # Runs every day at midnight UTC
+
+jobs:
+  my-job:
+    name: my-job
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+
+      # Run any `bun` or `bunx` command
+      - run: bun install
+      - run: bun index.ts
+      - run: cat domains.txt
