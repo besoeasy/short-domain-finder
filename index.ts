@@ -1,5 +1,6 @@
 import { generateDomains } from "./x/generateDomains";
 import { checkDomain } from "./x/checkDomain";
+
 import config from "./config.json";
 
 const file = Bun.file("domains.txt");
