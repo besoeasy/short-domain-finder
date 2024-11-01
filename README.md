@@ -6,7 +6,7 @@
 To install dependencies:
 
 ```bash
-bun install
+npm install
 ```
 
 Edit config.json
@@ -14,7 +14,5 @@ Edit config.json
 To run:
 
 ```bash
-bun run index.ts
+node app.cjs
 ```
-
-This project was created using `bun init` in bun v1.1.31. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.

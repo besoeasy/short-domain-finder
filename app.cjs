@@ -1,10 +1,11 @@
-
-import * as dns from "node:dns";
-import whoiser from "whoiser";
+const dns = require('node:dns').promises;
+const whoiser = require('whoiser');
+const fs = require('fs');
+const path = require('path');
 
 const checkDomainDNS = async (domain) => {
   try {
-    const data = await dns.promises.resolve4(domain);
+    const data = await dns.resolve4(domain);
     return data || null;
   } catch (error) {
     return null;
@@ -12,17 +13,15 @@ const checkDomainDNS = async (domain) => {
 };
 
 const isDomainAvailableFromWhois = (whoisData) => {
-  // Convert WHOIS data to string if it's not already
   const whoisString =
-    typeof whoisData === "string" ? whoisData : JSON.stringify(whoisData);
+    typeof whoisData === 'string' ? whoisData : JSON.stringify(whoisData);
 
-  // Check for indicators of an available domain in the WHOIS data
   const indicators = [
-    "No match for",
-    "NOT FOUND",
-    "Domain not found",
-    "Domain is available",
-    "Free for registration",
+    'No match for',
+    'NOT FOUND',
+    'Domain not found',
+    'Domain is available',
+    'Free for registration',
   ];
 
   return indicators.some((indicator) => whoisString.includes(indicator));
@@ -40,11 +39,9 @@ const checkDomain = async (domain) => {
   return isDomainAvailableFromWhois(domainWhois);
 };
 
-// Generate domain names of a specified length with an optional keyword
 const generateDomains = (length, keyword) => {
-  const chars = "abcdefghijklmnopqrstuvwxyz";
+  const chars = 'abcdefghijklmnopqrstuvwxyz';
   const domains = [];
-
   const suffixLength = length - (keyword.length || 0);
 
   const generateWithSuffix = (prefix, remainingLength) => {
@@ -57,11 +54,9 @@ const generateDomains = (length, keyword) => {
     }
   };
 
-  // Generate domains with the keyword appended
   if (keyword) {
     generateWithSuffix(keyword, suffixLength);
   } else {
-    // Generate random domains without a keyword
     const generateRandom = (prefix, remainingLength) => {
       if (remainingLength === 0) {
         domains.push(prefix);
@@ -71,24 +66,21 @@ const generateDomains = (length, keyword) => {
         generateRandom(prefix + chars[i], remainingLength - 1);
       }
     };
-    generateRandom("", length);
+    generateRandom('', length);
   }
 
   for (let i = domains.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * i);
-    const temp = domains[i];
-    domains[i] = domains[j];
-    domains[j] = temp;
+    [domains[i], domains[j]] = [domains[j], domains[i]];
   }
 
   return domains;
 };
 
+const config = require('./config.json');
 
-import config from "./config.json";
-
-const file = Bun.file("domains.txt");
-const writer = file.writer();
+const filePath = path.join(__dirname, 'domains.txt');
+const writer = fs.createWriteStream(filePath);
 
 async function main() {
   const domains = generateDomains(config.length, config.keyword);
@@ -96,14 +88,14 @@ async function main() {
   let domaincounter = 0;
   let founddomaincounter = 0;
 
-  for await (const element of domains) {
+  for (const element of domains) {
     const domain = `${element}.${config.extension}`;
 
     const addrs = await checkDomain(domain);
 
     if (addrs) {
       founddomaincounter++;
-      writer.write(domain + "\n");
+      writer.write(domain + '\n');
     }
 
     domaincounter++;
@@ -114,6 +106,8 @@ async function main() {
       `Checking : ${element}.${config.extension} (${domaincounter}/${domains.length}) - Found : ${founddomaincounter}`
     );
   }
+
+  writer.end();
 }
 
 main();
