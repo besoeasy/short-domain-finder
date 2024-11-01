@@ -1,8 +1,13 @@
-const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
-const dns = require('node:dns').promises;
-const whoiser = require('whoiser');
-const fs = require('fs');
-const path = require('path');
+const {
+  Worker,
+  isMainThread,
+  parentPort,
+  workerData,
+} = require("worker_threads");
+const dns = require("node:dns").promises;
+const whoiser = require("whoiser");
+const fs = require("fs");
+const path = require("path");
 
 // Function to resolve DNS for a given domain
 const checkDomainDNS = async (domain) => {
@@ -17,14 +22,14 @@ const checkDomainDNS = async (domain) => {
 // Function to check if the domain is available from WHOIS data
 const isDomainAvailableFromWhois = (whoisData) => {
   const whoisString =
-    typeof whoisData === 'string' ? whoisData : JSON.stringify(whoisData);
+    typeof whoisData === "string" ? whoisData : JSON.stringify(whoisData);
 
   const indicators = [
-    'No match for',
-    'NOT FOUND',
-    'Domain not found',
-    'Domain is available',
-    'Free for registration',
+    "No match for",
+    "NOT FOUND",
+    "Domain not found",
+    "Domain is available",
+    "Free for registration",
   ];
 
   return indicators.some((indicator) => whoisString.includes(indicator));
@@ -43,7 +48,7 @@ const checkDomain = async (domain) => {
 
 // Function to generate all possible domain names by replacing '*' with letters
 const generateDomains = (baseDomain) => {
-  const chars = 'abcdefghijklmnopqrstuvwxyz';
+  const chars = "abcdefghijklmnopqrstuvwxyz";
   const domains = [];
 
   const generateWithWildcard = (domain, index) => {
@@ -52,9 +57,12 @@ const generateDomains = (baseDomain) => {
       return;
     }
 
-    if (domain[index] === '*') {
+    if (domain[index] === "*") {
       for (let char of chars) {
-        generateWithWildcard(domain.slice(0, index) + char + domain.slice(index + 1), index + 1);
+        generateWithWildcard(
+          domain.slice(0, index) + char + domain.slice(index + 1),
+          index + 1
+        );
       }
     } else {
       generateWithWildcard(domain, index + 1);
@@ -66,19 +74,19 @@ const generateDomains = (baseDomain) => {
 };
 
 // Load configuration from JSON file
-const config = require('./config.json');
-const filePath = path.join(__dirname, 'domains.txt');
+const config = require("./config.json");
+const filePath = path.join(__dirname, "domains.txt");
 const writer = fs.createWriteStream(filePath);
 
 // Worker function
 const workerFunction = async (domains) => {
   const foundDomains = [];
-  
+
   for (const domain of domains) {
     const available = await checkDomain(domain);
     if (available) {
       foundDomains.push(domain);
-      console.log(`Found available domain: ${domain}`); // Logging found domains in worker
+      console.log(`Found : ${domain}`); // Logging found domains in worker
     }
   }
 
@@ -86,36 +94,38 @@ const workerFunction = async (domains) => {
 };
 
 const main = async () => {
-  const baseDomain = config.domain; 
+  const baseDomain = config.domain;
   const domains = generateDomains(baseDomain);
-  const numThreads = 20; // Number of worker threads
+  const numThreads = 100; // Number of worker threads
   const chunkSize = Math.ceil(domains.length / numThreads);
-  
+
   const workers = [];
-  
+
   for (let i = 0; i < numThreads; i++) {
     const chunk = domains.slice(i * chunkSize, (i + 1) * chunkSize);
     const worker = new Worker(__filename, { workerData: chunk });
-    
-    worker.on('message', (foundDomains) => {
+
+    worker.on("message", (foundDomains) => {
       foundDomains.forEach((domain) => {
-        writer.write(domain + '\n');
+        writer.write(domain + "\n");
       });
     });
 
-    worker.on('exit', () => {
-      console.log(`Worker ${i} has finished processing.`); // Log when each worker is done
-    });
+    worker.on("exit", () => {});
 
     workers.push(worker);
   }
 
-  await Promise.all(workers.map(worker => new Promise((resolve) => {
-    worker.on('exit', resolve);
-  })));
+  await Promise.all(
+    workers.map(
+      (worker) =>
+        new Promise((resolve) => {
+          worker.on("exit", resolve);
+        })
+    )
+  );
 
   writer.end();
-  console.log('All workers have finished processing.');
 };
 
 // Start the main process
