@@ -3,6 +3,7 @@ const whoiser = require('whoiser');
 const fs = require('fs');
 const path = require('path');
 
+// Function to resolve DNS for a given domain
 const checkDomainDNS = async (domain) => {
   try {
     const data = await dns.resolve4(domain);
@@ -12,6 +13,7 @@ const checkDomainDNS = async (domain) => {
   }
 };
 
+// Function to check if the domain is available from WHOIS data
 const isDomainAvailableFromWhois = (whoisData) => {
   const whoisString =
     typeof whoisData === 'string' ? whoisData : JSON.stringify(whoisData);
@@ -27,70 +29,56 @@ const isDomainAvailableFromWhois = (whoisData) => {
   return indicators.some((indicator) => whoisString.includes(indicator));
 };
 
+// Function to check the domain availability
 const checkDomain = async (domain) => {
   const domainDNS = await checkDomainDNS(domain);
-
   if (domainDNS) {
     return false;
   }
 
   const domainWhois = await whoiser(domain, { timeout: 1000, follow: 2 });
-
   return isDomainAvailableFromWhois(domainWhois);
 };
 
-const generateDomains = (length, keyword) => {
+// Function to generate all possible domain names by replacing '*' with letters
+const generateDomains = (baseDomain) => {
   const chars = 'abcdefghijklmnopqrstuvwxyz';
   const domains = [];
-  const suffixLength = length - (keyword.length || 0);
 
-  const generateWithSuffix = (prefix, remainingLength) => {
-    if (remainingLength === 0) {
-      domains.push(prefix);
+  const generateWithWildcard = (domain, index) => {
+    if (index === domain.length) {
+      domains.push(domain);
       return;
     }
-    for (let i = 0; i < chars.length; i++) {
-      generateWithSuffix(prefix + chars[i], remainingLength - 1);
+
+    if (domain[index] === '*') {
+      for (let char of chars) {
+        generateWithWildcard(domain.slice(0, index) + char + domain.slice(index + 1), index + 1);
+      }
+    } else {
+      generateWithWildcard(domain, index + 1);
     }
   };
 
-  if (keyword) {
-    generateWithSuffix(keyword, suffixLength);
-  } else {
-    const generateRandom = (prefix, remainingLength) => {
-      if (remainingLength === 0) {
-        domains.push(prefix);
-        return;
-      }
-      for (let i = 0; i < chars.length; i++) {
-        generateRandom(prefix + chars[i], remainingLength - 1);
-      }
-    };
-    generateRandom('', length);
-  }
-
-  for (let i = domains.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * i);
-    [domains[i], domains[j]] = [domains[j], domains[i]];
-  }
-
+  generateWithWildcard(baseDomain, 0);
   return domains;
 };
 
+// Load configuration from JSON file
 const config = require('./config.json');
 
 const filePath = path.join(__dirname, 'domains.txt');
 const writer = fs.createWriteStream(filePath);
 
 async function main() {
-  const domains = generateDomains(config.length, config.keyword);
+  // Generate domains based on the format from config
+  const baseDomain = config.domain; // e.g., "aman***.com"
+  const domains = generateDomains(baseDomain);
 
   let domaincounter = 0;
   let founddomaincounter = 0;
 
-  for (const element of domains) {
-    const domain = `${element}.${config.extension}`;
-
+  for (const domain of domains) {
     const addrs = await checkDomain(domain);
 
     if (addrs) {
@@ -103,7 +91,7 @@ async function main() {
     console.clear();
 
     console.log(
-      `Checking : ${element}.${config.extension} (${domaincounter}/${domains.length}) - Found : ${founddomaincounter}`
+      `Checking : ${domain} (${domaincounter}/${domains.length}) - Found : ${founddomaincounter}`
     );
   }
 
